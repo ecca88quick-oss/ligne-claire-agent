@@ -1,0 +1,6 @@
+# Runtime log folder
+# Files written here at runtime (never commit real logs):
+#   review_queue.jsonl
+#   audit_log.jsonl
+#   similarity_log.jsonl
+#   dashboard_export.html
