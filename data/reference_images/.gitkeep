@@ -1,0 +1,4 @@
+# Reference images for similarity checking (Step 3 guardrail).
+# Add protected/copyright-sensitive images here.
+# The image_similarity_flagger.py script will compare generated
+# outputs against these files.
