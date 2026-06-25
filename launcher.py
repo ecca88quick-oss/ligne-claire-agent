@@ -27,7 +27,7 @@ HF_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-dif
 
 LIGNE_CLAIRE_STYLE = (
     "ligne claire comic art style, clean bold outlines, flat colour fills, "
-    "Franco-Belgian comic book illustration, Tintin style, clear visual storytelling, "
+    "Franco-Belgian comic book illustration, Tintin style, "
     "no shading, no gradients, white background, high contrast"
 )
 
@@ -45,17 +45,18 @@ def get_hf_token():
 
 
 def generate_image(prompt, token):
-    full_prompt = f"{prompt}, {LIGNE_CLAIRE_STYLE}"
-    headers = {"Authorization": f"Bearer {token}"}
+    full_prompt = prompt + ", " + LIGNE_CLAIRE_STYLE
+    headers = {"Authorization": "Bearer " + token}
     payload = {"inputs": full_prompt}
     response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=120)
     if response.status_code == 200:
         return Image.open(io.BytesIO(response.content))
     else:
-        raise RuntimeError(f"API Fehler {response.status_code}: {response.text[:200]}")
+        raise RuntimeError("API Fehler " + str(response.status_code) + ": " + response.text[:200])
 
 
 class LigneClaireApp(tk.Tk):
+
     def __init__(self):
         super().__init__()
         self.title("Ligne-Claire Comic Generator")
@@ -66,54 +67,41 @@ class LigneClaireApp(tk.Tk):
         self._build_ui()
 
     def _build_ui(self):
-        # Token Frame
         token_frame = ttk.LabelFrame(self, text="HuggingFace Token", padding=8)
         token_frame.pack(fill="x", padx=12, pady=(10, 4))
-
         self.token_var = tk.StringVar(value=get_hf_token())
-        token_entry = ttk.Entry(token_frame, textvariable=self.token_var, show="*", width=60)
-        token_entry.pack(side="left", fill="x", expand=True)
+        self._token_entry = ttk.Entry(token_frame, textvariable=self.token_var, show="*", width=60)
+        self._token_entry.pack(side="left", fill="x", expand=True)
         ttk.Button(token_frame, text="Anzeigen", command=self._toggle_token).pack(side="left", padx=4)
         self._token_shown = False
-        self._token_entry = token_entry
+        ttk.Label(token_frame, text="(nicht gespeichert)", foreground="gray").pack(side="left", padx=6)
 
-        ttk.Label(token_frame, text="(Token wird nicht gespeichert)", foreground="gray").pack(side="left", padx=6)
-
-        # Prompt Frame
         prompt_frame = ttk.LabelFrame(self, text="Bildprompt", padding=8)
         prompt_frame.pack(fill="x", padx=12, pady=4)
-
         self.prompt_var = tk.StringVar(value="Ein Detektiv in Paris bei Nacht")
         prompt_entry = ttk.Entry(prompt_frame, textvariable=self.prompt_var, width=70)
         prompt_entry.pack(side="left", fill="x", expand=True)
         prompt_entry.bind("<Return>", lambda e: self._start_generation())
-
         self.gen_button = ttk.Button(prompt_frame, text="Generieren", command=self._start_generation)
         self.gen_button.pack(side="left", padx=6)
 
-        # Status
         self.status_var = tk.StringVar(value="Bereit.")
-        status_bar = ttk.Label(self, textvariable=self.status_var, anchor="w", foreground="blue")
-        status_bar.pack(fill="x", padx=12)
+        ttk.Label(self, textvariable=self.status_var, anchor="w", foreground="blue").pack(fill="x", padx=12)
 
-        # Progress
         self.progress = ttk.Progressbar(self, mode="indeterminate")
         self.progress.pack(fill="x", padx=12, pady=2)
 
-        # Image display
         img_frame = ttk.LabelFrame(self, text="Generiertes Bild", padding=6)
         img_frame.pack(fill="both", expand=True, padx=12, pady=4)
-
-        self.canvas = tk.Canvas(img_frame, bg="#1a1a1a", cursor="hand2")
+        self.canvas = tk.Canvas(img_frame, bg="#1a1a1a")
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", self._on_resize)
 
-        # Save button
         save_frame = ttk.Frame(self)
         save_frame.pack(fill="x", padx=12, pady=(2, 10))
         self.save_button = ttk.Button(save_frame, text="Bild speichern", command=self._save_image, state="disabled")
         self.save_button.pack(side="right")
-        ttk.Label(save_frame, text=f"Ausgabe: {OUTPUT_DIR}", foreground="gray").pack(side="left")
+        ttk.Label(save_frame, text="Ausgabe: " + str(OUTPUT_DIR), foreground="gray").pack(side="left")
 
     def _toggle_token(self):
         self._token_shown = not self._token_shown
@@ -126,10 +114,10 @@ class LigneClaireApp(tk.Tk):
             messagebox.showwarning("Kein Prompt", "Bitte einen Bildprompt eingeben.")
             return
         if not token:
-            messagebox.showerror("Kein Token", "Bitte HuggingFace Token eingeben oder in .env-Datei speichern.\n\nErstelle .env im Projektordner:\nHF_TOKEN=hf_...")
+            messagebox.showerror("Kein Token", "Bitte HuggingFace Token eingeben.\n\nErstelle .env:\nHF_TOKEN=hf_...")
             return
         self.gen_button.config(state="disabled")
-        self.status_var.set("Bild wird generiert ... (kann 30-60 Sek. dauern)")
+        self.status_var.set("Bild wird generiert ... (30-60 Sek.)")
         self.progress.start(10)
         threading.Thread(target=self._generate_thread, args=(prompt, token), daemon=True).start()
 
@@ -146,7 +134,7 @@ class LigneClaireApp(tk.Tk):
         self._render_image()
         self.save_button.config(state="normal")
         self.gen_button.config(state="normal")
-        self.status_var.set("Bild generiert! Jetzt speichern oder neuen Prompt eingeben.")
+        self.status_var.set("Fertig! Bild speichern oder neuen Prompt eingeben.")
 
     def _render_image(self):
         if not self.current_pil_image:
@@ -165,14 +153,14 @@ class LigneClaireApp(tk.Tk):
     def _show_error(self, msg):
         self.progress.stop()
         self.gen_button.config(state="normal")
-        self.status_var.set(f"Fehler: {msg[:80]}")
+        self.status_var.set("Fehler: " + msg[:80])
         messagebox.showerror("Generierungsfehler", msg)
 
     def _save_image(self):
         if not self.current_pil_image:
             return
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        default_name = OUTPUT_DIR / f"ligne_claire_{timestamp}.png"
+        default_name = OUTPUT_DIR / ("ligne_claire_" + timestamp + ".png")
         path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG", "*.png"), ("JPEG", "*.jpg"), ("Alle Dateien", "*.*")],
@@ -182,7 +170,7 @@ class LigneClaireApp(tk.Tk):
         )
         if path:
             self.current_pil_image.save(path)
-            self.status_var.set(f"Gespeichert: {path}")
+            self.status_var.set("Gespeichert: " + path)
 
 
 if __name__ == "__main__":
