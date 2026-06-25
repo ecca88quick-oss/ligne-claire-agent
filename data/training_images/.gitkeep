@@ -1,0 +1,6 @@
+# This folder holds raw training images (photos, sketches, references).
+# Supported formats: .png .jpg .jpeg .webp
+# Subfolders allowed, e.g.:
+#   data/training_images/ligne_claire/
+#   data/training_images/photos/
+#   data/reference_images/
