@@ -6,59 +6,59 @@
 
 ## About This Project
 
-**Ligne Claire** (French: *clear line*) is a graphic art style that originated in Franco-Belgian comics during the early-to-mid 20th century. It is defined by uniform line weights, minimal shading, and strong compositional clarity. This project uses that visual style as the **target aesthetic** for AI-generated images.
+**Ligne Claire** (French: *clear line*) is a graphic art style from Franco-Belgian comics (early-to-mid 20th century), defined by uniform line weights, minimal shading, and strong compositional clarity.
 
-This repository provides a set of tools to:
+This repository provides tools to:
 
-1. **Filter and sanitise prompts** before they are sent to an image generation model, ensuring no protected character names, trademarked titles, or copyrighted IP references are passed through.
-2. **Detect visual similarity** between AI-generated output and a set of reference images, flagging results that are too close to known protected works.
-3. **Queue flagged images for human review** via a lightweight dashboard before any output is published or used.
+1. **Filter and sanitise prompts** — no protected names, trademarks, or copyrighted IP pass through.
+2. **Detect visual similarity** between AI-generated output and reference images.
+3. **Queue flagged images for human review** before any output is published.
 
-> **Copyright notice:** This project does not reproduce, distribute, or reference any copyrighted artworks, characters, or titles. The Ligne Claire art *style* itself is not subject to copyright protection — only specific character designs, story elements, and original artwork are. All reference images used with this pipeline must be either original works or images for which you hold the appropriate rights.
+> **Copyright notice:** This project does not reproduce or reference any copyrighted artworks or characters. The Ligne Claire *style* is not subject to copyright. All reference images must be original works or images for which you hold appropriate rights.
 
 ---
 
 ## Quickstart — GUI Launcher (empfohlen)
 
-Kein Terminal erforderlich. Einfach Doppelklick auf `launcher.py`:
+Kein Terminal erforderlich. Doppelklick auf `launcher.py` oder:
 
 ```bash
 python launcher.py
 ```
 
-Das öffnet ein grafisches Fenster mit 5 Schaltflächen:
+Es öffnet sich ein Fenster mit 5 Schaltflächen:
 
-| Schaltfläche | Aktion |
+| Schaltfläche | Funktion |
 |---|---|
-| **Schritt 1: Bilder laden** | Kopiert Trainingsbilder aus `data/training_images/` in `data/reference_images/` |
-| **Schritt 2: Prompt prüfen** | Gibt einen Prompt ein und prüft ihn durch den Prompt-Gate |
-| **Schritt 3a: Einzelbild prüfen** | Wählt eine Bilddatei und prüft sie auf Ähnlichkeit |
-| **Schritt 3b: Batch-Ordner prüfen** | Wählt einen Ordner und prüft alle Bilder darin |
-| **Schritt 4: Review-Dashboard** | Zeigt die Review-Queue und Statistiken an |
+| Schritt 1: Bilder laden | Kopiert `data/training_images/` → `data/reference_images/` |
+| Schritt 2: Prompt prüfen | Prompt eingeben und durch den Gate schicken |
+| Schritt 3a: Einzelbild prüfen | Bilddatei wählen und Ähnlichkeit prüfen |
+| Schritt 3b: Batch-Ordner prüfen | Ganzen Ordner mit Bildern prüfen |
+| Schritt 4: Review-Dashboard | Review-Queue und Statistiken anzeigen |
 
-Alle Ausgaben erscheinen im eingebauten Konsolenfenster der GUI.
+Alle Ausgaben erscheinen im Konsolenfenster der GUI.
 
 ---
 
 ## Quickstart — Kommandozeile
 
 ```bash
-# Demo-Pipeline (alle Schritte, kein Bild erforderlich)
+# Demo (alle Schritte ohne Bild)
 python main.py
 
-# Schritt 1: Trainingsbilder laden
+# Schritt 1: Bilder laden
 python main.py --load-images
 
 # Schritt 2: Prompt prüfen
-python main.py --prompt "Ein Abenteurer im klaren Linienstil"
+python main.py --prompt "Abenteurer im klaren Linienstil"
 
-# Schritt 3a: Einzelbild prüfen
-python main.py --generated pfad/zum/bild.png
+# Schritt 3a: Einzelbild
+python main.py --generated pfad/bild.png
 
-# Schritt 3b: Ordner prüfen (Batch)
+# Schritt 3b: Batch
 python main.py --batch pfad/zum/ordner/
 
-# Schritt 4: Review-Queue anzeigen
+# Schritt 4: Review
 python main.py --review
 ```
 
@@ -66,15 +66,15 @@ python main.py --review
 
 ## Voraussetzungen
 
-- Python 3.10 oder neuer
-- Tkinter (in Python eingebaut, kein `pip install` nötig)
-- `Pillow` und `imagehash` für die Bildvergleichsfunktion:
+- Python 3.10+
+- Tkinter (eingebaut, kein pip nötig)
+- Für Bildvergleich:
 
 ```bash
 pip install Pillow imagehash
 ```
 
-> Alle anderen Abhängigkeiten (`pathlib`, `argparse`, `json`, `re`, `uuid`, `threading`, `subprocess`, `types`) sind Python-Standardbibliotheken — **keine Kosten, keine externen Dienste**.
+> Alle anderen Abhängigkeiten sind Python-Standardbibliotheken — **kostenlos, keine externen Dienste**.
 
 ---
 
@@ -82,21 +82,20 @@ pip install Pillow imagehash
 
 ```
 ligne-claire-agent/
-├── launcher.py              # GUI-Starter (Tkinter) ← hier starten
-├── main.py                  # CLI-Einstiegspunkt
+├── launcher.py                    # GUI-Starter (Tkinter) ← hier starten
+├── main.py                        # CLI-Einstiegspunkt
 ├── scripts/
 │   ├── load_training_images.py    # Schritt 1: Referenzbilder laden
 │   ├── prompt_gate.py             # Schritt 2: Prompt filtern & umschreiben
 │   ├── image_similarity_flagger.py # Schritt 3: Perceptual Hashing
 │   └── review_dashboard.py        # Schritt 4: Review-Queue & Statistiken
 ├── data/
-│   ├── training_images/   # Eigene Referenzbilder hier ablegen
-│   └── reference_images/  # Wird automatisch befüllt
+│   ├── training_images/           # Eigene Bilder hier ablegen
+│   └── reference_images/          # Wird automatisch befüllt
 ├── logs/
-│   ├── review_queue.jsonl # Markierte Bilder (automatisch)
-│   └── audit_log.jsonl    # Entscheidungsprotokoll
-├── README.md
-└── LICENSE                  # MIT
+│   ├── review_queue.jsonl         # Markierte Bilder (auto)
+│   └── audit_log.jsonl            # Entscheidungsprotokoll
+└── LICENSE                        # MIT
 ```
 
 ---
@@ -104,17 +103,17 @@ ligne-claire-agent/
 ## Pipeline-Ablauf
 
 ```
-[Eigene Bilder]  -->  load_training_images.py  -->  [Referenzindex]
-                                                          |
-[Prompt-Eingabe] -->     prompt_gate.py         -->  [Geprüfter Prompt]
-                                                          |
-[Generiertes Bild] --> image_similarity_flagger.py --> [Risikostufe: LOW/MEDIUM/HIGH]
-                                                          |
-                            [HIGH/MEDIUM] --> review_dashboard.py --> [Freigabe / Ablehnung]
+[Bilder]  --> load_training_images  --> [Referenzindex]
+                                              |
+[Prompt]  --> prompt_gate           --> [Geprüfter Prompt]
+                                              |
+[Bild]    --> image_similarity_flagger --> [LOW / MEDIUM / HIGH]
+                                              |
+             [MEDIUM/HIGH] --> review_dashboard --> [Freigabe / Ablehnung]
 ```
 
 ---
 
 ## Lizenz
 
-MIT License. Siehe [LICENSE](LICENSE).
+MIT License — siehe [LICENSE](LICENSE).
