@@ -11,6 +11,7 @@ Ausfuehren: python main.py
 import sys
 import argparse
 from pathlib import Path
+import types
 
 # --- Pfad-Setup: scripts/ dem Import-Pfad hinzufuegen ---
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
@@ -28,6 +29,14 @@ BANNER = """
 """
 
 
+def _empty_args(**kwargs):
+    """Erstellt ein einfaches Namespace-Objekt fuer cmd_*-Funktionen."""
+    ns = types.SimpleNamespace()
+    for k, v in kwargs.items():
+        setattr(ns, k, v)
+    return ns
+
+
 def step_load_images():
     print("\n[Schritt 1] Trainingsdaten laden...")
     try:
@@ -42,7 +51,7 @@ def step_load_images():
         print("  Lege data/training_images/ an und fuege eigene Bilder hinzu.")
 
 
-def step_prompt_gate(prompt: str) -> str | None:
+def step_prompt_gate(prompt: str):
     print("\n[Schritt 2] Prompt-Gate pruefen...")
     result = classify_prompt(prompt)
     decision = result.get("decision")
@@ -68,7 +77,7 @@ def step_similarity_check(path: str, batch: bool = False):
         reference_index = build_reference_index(ref_dir)
     except Exception:
         reference_index = []
-        print("  Hinweis: Kein Referenzindex gefunden – Pruefung ohne Referenzbilder.")
+        print("  Hinweis: Kein Referenzindex – Pruefung ohne Referenzbilder.")
     if batch:
         results = run_batch(Path(path), reference_index)
     else:
@@ -82,9 +91,10 @@ def step_similarity_check(path: str, batch: bool = False):
 
 def step_review_dashboard():
     print("\n[Schritt 4] Review-Queue anzeigen...")
-    cmd_list()
+    args = _empty_args(status=None)
+    cmd_list(args)
     print("\nStatistik:")
-    cmd_stats()
+    cmd_stats(args)
 
 
 def main():
@@ -94,15 +104,15 @@ def main():
     )
     parser.add_argument(
         "--prompt", type=str, default=None,
-        help="Prompt-Text fuer den Prompt-Gate (optional)"
+        help="Prompt-Text fuer den Prompt-Gate"
     )
     parser.add_argument(
         "--generated", type=str, default=None,
-        help="Pfad zu einem generierten Bild fuer die Aehnlichkeitspruefung"
+        help="Pfad zu einem generierten Bild"
     )
     parser.add_argument(
         "--batch", type=str, default=None,
-        help="Pfad zu einem Ordner mit generierten Bildern (Batch-Modus)"
+        help="Pfad zu einem Ordner mit generierten Bildern"
     )
     parser.add_argument(
         "--review", action="store_true",
@@ -110,20 +120,19 @@ def main():
     )
     parser.add_argument(
         "--load-images", action="store_true",
-        help="Nur Trainingsdaten laden und in Referenzordner kopieren"
+        help="Trainingsdaten laden"
     )
     args = parser.parse_args()
 
-    # Wenn keine Argumente: komplette Demo-Pipeline
     if len(sys.argv) == 1:
         step_load_images()
         demo_prompt = "Ein Abenteurer im Stil eines europaeischen Comics mit klaren Konturen"
         step_prompt_gate(demo_prompt)
         print("\n[Schritt 3] Aehnlichkeitspruefung:")
-        print("  Kein Bild angegeben. Starte mit: python main.py --generated pfad/zum/bild.png")
-        print("\n[Schritt 4] Review-Dashboard:")
+        print("  Starte mit: python main.py --generated pfad/zum/bild.png")
+        print("\n[Schritt 4] Review-Queue:")
         print("  Starte mit: python main.py --review")
-        print("\nPipeline-Demo abgeschlossen. Alle Schritte verfuegbar.")
+        print("\nPipeline-Demo abgeschlossen.")
         return
 
     if args.load_images:
