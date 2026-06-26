@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-HF_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+HF_API_URL = "https://router.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0""
 
 LIGNE_CLAIRE_STYLE = (
     "ligne claire comic art style, clean bold outlines, flat colour fills, "
